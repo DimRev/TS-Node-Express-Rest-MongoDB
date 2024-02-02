@@ -14,7 +14,7 @@ const app = express()
 mongoose.connect(config.mongo.url, { retryWrites: true, w: 'majority' })
   .then(() => {
     loggerService.info('Connected to MongoDB')
-    loggerService.debug('Server is loading...')
+    loggerService.info('Server is loading...')
     startServer()
   })
   .catch((err) => {
@@ -50,10 +50,10 @@ const startServer = () => {
   /** LOG REQ & RES FROM SERVER - FOR DEBUGGING, COMMENT OUT IF NOT NEEDED */
 
   app.use((req, res, next) => {
-    loggerService.info(`Incoming -> Method[${req.method}] - Url: [${req.url}] - IP [${req.socket.remoteAddress}]`)
+    loggerService.incoming(`Incoming -> Method[${req.method}] - Url: [${req.url}] - IP [${req.socket.remoteAddress}]`)
 
     res.on('finish', () => {
-      loggerService.info(`Outgoing -> Method[${req.method}] - Url: [${req.url}] - IP [${req.socket.remoteAddress}] - Status: [${res.statusCode}]`)
+      loggerService.outgoing(res.statusCode, `Outgoing -> Method[${req.method}] - Url: [${req.url}] - IP [${req.socket.remoteAddress}] - Status: [${res.statusCode}]`)
     })
 
     next()
@@ -80,12 +80,12 @@ const startServer = () => {
   /** HEALTHCHECK */
   app.get('/ping', (req, res, next) => res.status(200).send({ message: 'pong' }))
 
-  const port = process.env.PORT || 3030
+  const port = config.server.port
   app.get('/**', (req, res) => {
     res.sendFile(path.resolve('public/index.html'))
   })
 
   app.listen(port, () => {
-    loggerService.debug(`Server is running on port: [${port}]`)
+    loggerService.info(`Server is running on port: [${port}]`)
   })
 }

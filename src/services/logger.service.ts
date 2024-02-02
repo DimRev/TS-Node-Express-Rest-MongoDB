@@ -3,16 +3,22 @@ import fs from 'fs'
 
 export const loggerService = {
   debug(...args: any[]) {
-    doLog('DEBUG', ...args)
+    doLog('DEBUG', undefined, ...args)
   },
   info(...args: any[]) {
-    doLog('INFO', ...args)
+    doLog('INFO', undefined, ...args)
   },
   warn(...args: any[]) {
-    doLog('WARN', ...args)
+    doLog('WARN', undefined, ...args)
   },
   error(...args: any[]) {
-    doLog('ERROR', ...args)
+    doLog('ERROR', undefined, ...args)
+  },
+  incoming(...args: any[]) {
+    doLog('INCOMING', undefined, ...args)
+  },
+  outgoing(status: number, ...args: any[]) {
+    doLog('OUTGOING', status, ...args)
   },
 }
 
@@ -31,25 +37,38 @@ function isError(e: Error) {
   return e && e.stack && e.message
 }
 
-type Level = 'ERROR' | 'WARN' | 'INFO' | 'DEBUG'
+type Level = 'ERROR' | 'WARN' | 'INFO' | 'DEBUG' | 'INCOMING' | 'OUTGOING'
 
-function doLog(level: Level, ...args: any[]) {
+function doLog(level: Level, status?: number, ...args: any[]) {
   const strs = args.map((arg) =>
     typeof arg === 'string' || isError(arg) ? arg : JSON.stringify(arg)
   )
   var line = strs.join(' | ')
-  line = `${getTime()} - ${level} - ${line}\n`
-
-  consoleLogger[level](line)
+  line = `${line}`
+  consoleLogger[level](line, status)
+  line = `${getTime()} - ${level} - line  '\n'`
 
   fs.appendFile('./logs/backend.log', line, (err) => {
     if (err) console.log('FATAL: cannot write to log file')
   })
 }
 
+function checkStatus(status: number | undefined, type?: 'bg') {
+  if (!status) {
+    return type === 'bg' ? 'bgWhite' : 'white'
+  } else if (status >= 200 && status < 300) {
+    return type === 'bg' ? 'bgGreen' : 'green'
+  } else {
+    return type === 'bg' ? 'bgRed' : 'red'
+  }
+}
+
 export class consoleLogger {
-  public static INFO = (args: any) => console.log(chalk.blue('[INFO]'), typeof args === 'string' ? chalk.blueBright(args) : args)
-  public static WARN = (args: any) => console.log(chalk.yellow('[WARN]'), typeof args === 'string' ? chalk.yellowBright(args) : args)
-  public static ERROR = (args: any) => console.log(chalk.red('[ERROR]'), typeof args === 'string' ? chalk.redBright(args) : args)
-  public static DEBUG = (args: any) => console.log(chalk.cyan('[DEBUG]'), typeof args === 'string' ? chalk.cyanBright(args) : args)
+  public static INFO = (line: string) => console.log(chalk.bgBlue(`[INFO - ${getTime()}]`), chalk.blueBright(line))
+  public static WARN = (line: string) => console.log(chalk.bgYellow(`[WARN - ${getTime()}]`), chalk.yellowBright(line))
+  public static ERROR = (line: string) => console.log(chalk.bgRed.bold(`[ERROR - ${getTime()}]`), chalk.redBright(line))
+  public static DEBUG = (line: string) => console.log(chalk.bgCyan(`[DEBUG - ${getTime()}]`), chalk.cyanBright(line))
+  public static INCOMING = (line: string) => console.log(chalk.bgGreen.bold(`[INCOMING - ${getTime()}]`), chalk.green(line))
+  public static OUTGOING = (line: string, status?: number) => console.log(chalk[checkStatus(status, 'bg')].bold(`[OUTGOING - ${getTime()}]`), chalk[checkStatus(status)](line), '\n')
+
 }
