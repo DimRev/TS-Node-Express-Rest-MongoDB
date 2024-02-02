@@ -44,10 +44,8 @@ function doLog(level: Level, status?: number, ...args: any[]) {
     typeof arg === 'string' || isError(arg) ? arg : JSON.stringify(arg)
   )
   var line = strs.join(' | ')
-  line = `${line}`
   consoleLogger[level](line, status)
-  line = `${getTime()} - ${level} - line  '\n'`
-
+  line = `${getTime()} - ${level} - ${line}\n`
   fs.appendFile('./logs/backend.log', line, (err) => {
     if (err) console.log('FATAL: cannot write to log file')
   })
