@@ -4,7 +4,7 @@ import { loggerService } from '../../services/logger.service'
 
 export const objectRouter = express.Router()
 
-objectRouter.post('/create', objectController.createObject)
+objectRouter.post('/create/', objectController.createObject)
 objectRouter.get('/get/:objectId', objectController.readObject)
 objectRouter.get('/get/', objectController.readAllObjects)
 objectRouter.patch('/update/:objectId', objectController.updateObject)
