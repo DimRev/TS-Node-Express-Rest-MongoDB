@@ -4,16 +4,17 @@ import Object from './object.model'
 import { loggerService } from '../../services/logger.service'
 
 const createObject = async (req: Request, res: Response, next: NextFunction) => {
-  const { name } = req.body
+  const { name, country } = req.body
   const objectToAdd = new Object({
     _id: new mongoose.Types.ObjectId(),
-    name
+    name,
+    country
   })
 
   try {
     const addedObject = await objectToAdd.save()
     loggerService.debug(`Added object: [${addedObject._id}]`)
-    return res.status(201).send({ object: addedObject })
+    return res.status(201).send(addedObject)
   } catch (err) {
     loggerService.error(err)
     return res.status(500).send({ err })
@@ -27,7 +28,7 @@ const readObject = async (req: Request, res: Response, next: NextFunction) => {
     const foundObject = await Object.findById(objectId)
     if (foundObject) {
       loggerService.debug(`Found object: [${foundObject._id}]`)
-      return res.status(200).send({ object: foundObject })
+      return res.status(200).send(foundObject)
     } else {
       loggerService.error(`Failed to find: [${objectId}]`)
       return res.status(404).send({ message: 'Object not found', objectId: objectId })
@@ -42,7 +43,7 @@ const readAllObjects = async (req: Request, res: Response, next: NextFunction) =
   try {
     const objects = await Object.find()
     loggerService.debug(`Found [${objects.length}] objects`)
-    return res.status(200).send({ objects })
+    return res.status(200).send(objects)
   } catch (err) {
     loggerService.error(err)
     return res.status(500).send({ err })
@@ -58,7 +59,7 @@ const updateObject = async (req: Request, res: Response, next: NextFunction) => 
       object.set(req.body)
       const updatedObject = await object.save()
       loggerService.debug(`Updated object: [${updatedObject._id}]`)
-      return res.status(200).send({ object: updatedObject })
+      return res.status(200).send(updatedObject)
     } else {
       loggerService.error(`Failed to update, object not found: [${objectId}] `)
       return res.status(404).send({ message: 'Not found', objectId: objectId })
@@ -76,7 +77,7 @@ const deleteObject = async (req: Request, res: Response, next: NextFunction) => 
     const deletedObject = await Object.findByIdAndDelete(objectId)
     if (deletedObject) {
       loggerService.debug(`Deleted object: [${deletedObject._id}]`)
-      return res.status(201).send({ message: 'Deleted', objectId: objectId })
+      return res.status(201).send(objectId)
     } else {
       loggerService.error(`Failed to delete, object not found: [${objectId}]`)
       return res.status(404).send({ message: 'Not found', objectId: objectId })

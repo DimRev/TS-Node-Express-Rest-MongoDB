@@ -11,5 +11,5 @@ objectRouter.patch('/update/:objectId', objectController.updateObject)
 objectRouter.delete('/delete/:objectId', objectController.deleteObject)
 objectRouter.get('/**', (req, res, next) => {
   loggerService.warn('Attempt to access invalid route')
-  res.status(400).send({ message: 'Invalid route' })
+  res.status(404).send({ message: 'Invalid route' })
 })
