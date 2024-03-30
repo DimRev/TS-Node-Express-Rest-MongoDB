@@ -4,12 +4,15 @@ import cors from 'cors'
 import path from 'path'
 import mongoose from 'mongoose'
 
-import { objectRouter } from './api/object/object.routes'
 import { loggerService } from './services/logger.service'
 import { config } from './config/config'
 
+// API Routes imports
+import { itemRouter } from './api/object/item.routes'
+
 
 const app = express()
+const PORT = config.server.port
 
 mongoose.connect(config.mongo.url, { retryWrites: true, w: 'majority' })
   .then(() => {
@@ -37,11 +40,13 @@ const startServer = () => {
     loggerService.info('Server running in development mode')
     const corsOptions = {
       origin: [
-        'http://127.0.0.1:3030',
-        'http://localhost:3030',
+        `http://127.0.0.1:${PORT}}`,
+        `http://localhost:${PORT}`,
         'http://127.0.0.1:5173',
         'http://localhost:5173'
       ],
+      methods: ['PUT', 'POST', 'PATCH', 'DELETE', 'GET'],
+      allowedHeaders: ['Origin', 'X-Requested-With', 'Content-Type', 'Accept', 'Authorization'],
       credentials: true,
     }
     app.use(cors(corsOptions))
@@ -59,40 +64,19 @@ const startServer = () => {
     next()
   })
 
-  /** RULES OF API */
-
-  app.use((req, res, next) => {
-    let path
-    if (process.env.NODE_ENV === 'production') {
-      path = '*'
-    } else {
-      path = 'http://localhost:5173'
-
-    }
-    res.header('Access-Control-Allow-Origin', 'http://localhost:5173',)
-    res.header('Access-Control-Allow-Headers', 'Origin, X-Requested-With, Content-Type, Accept, Authorization')
-
-    if (req.method === 'OPTIONS') {
-      res.header('Access-Control-Allow-Methods', 'PUT, POST, PATCH, DELETE, GET')
-      return res.status(200).send({})
-
-    }
-
-    next()
-  })
-
   /** ROUTES */
-  app.use('/api/object/', objectRouter)
+  app.use('/api/item/', itemRouter)
 
   /** HEALTHCHECK */
   app.get('/ping', (req, res, next) => res.status(200).send({ message: 'pong' }))
 
-  const port = config.server.port
+  /** STATIC HTML as FALLBACK */
+
   app.get('/**', (req, res) => {
     res.sendFile(path.resolve('public/index.html'))
   })
 
-  app.listen(port, () => {
-    loggerService.info(`Server is running on port: [${port}]`)
+  app.listen(PORT, () => {
+    loggerService.info(`Server is running on port: [${PORT}]`)
   })
 }
